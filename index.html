@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Swarm Bubbles</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #050608;
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            color: #fff;
+        }
+
+        #bubbleContainer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            background: linear-gradient(to bottom, rgba(5,6,8,0.95) 0%, rgba(5,6,8,0.7) 70%, transparent 100%);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: #00D4FF;
+            letter-spacing: -0.5px;
+        }
+
+        .logo span {
+            color: #fff;
+            opacity: 0.7;
+        }
+
+        .stats {
+            display: flex;
+            gap: 30px;
+        }
+
+        .stat {
+            text-align: right;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #00D4FF;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: rgba(255,255,255,0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Controls */
+        .controls {
+            position: fixed;
+            top: 80px;
+            left: 30px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 5px;
+            background: rgba(255,255,255,0.05);
+            padding: 5px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .control-btn {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            color: rgba(255,255,255,0.6);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .control-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+
+        .control-btn.active {
+            background: rgba(0,212,255,0.2);
+            color: #00D4FF;
+        }
+
+        .control-label {
+            padding: 8px 12px;
+            color: rgba(255,255,255,0.4);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+        }
+
+        .legend {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            gap: 20px;
+            z-index: 100;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.active { background: #00FF88; box-shadow: 0 0 10px #00FF88; }
+        .legend-dot.waiting { background: #FFB800; box-shadow: 0 0 10px #FFB800; }
+        .legend-dot.error { background: #FF4757; box-shadow: 0 0 10px #FF4757; }
+        .legend-dot.idle { background: #6B7280; box-shadow: 0 0 10px #6B7280; }
+
+        /* Glassmorphism Bubble */
+        .bubble {
+            position: absolute;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 15px;
+            user-select: none;
+            
+            /* Glassmorphism */
+            background: rgba(20, 25, 35, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .bubble::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .bubble.status-active {
+            border-color: rgba(0,255,136,0.3);
+            box-shadow: 
+                0 0 30px rgba(0,255,136,0.2),
+                0 0 60px rgba(0,255,136,0.1),
+                inset 0 0 30px rgba(0,255,136,0.05);
+            animation: pulse-active 2s ease-in-out infinite;
+        }
+
+        .bubble.status-waiting {
+            border-color: rgba(255,184,0,0.3);
+            box-shadow: 
+                0 0 30px rgba(255,184,0,0.15),
+                0 0 60px rgba(255,184,0,0.08),
+                inset 0 0 30px rgba(255,184,0,0.05);
+        }
+
+        .bubble.status-error {
+            border-color: rgba(255,71,87,0.4);
+            box-shadow: 
+                0 0 30px rgba(255,71,87,0.25),
+                0 0 60px rgba(255,71,87,0.15),
+                inset 0 0 30px rgba(255,71,87,0.08);
+            animation: pulse-error 1s ease-in-out infinite;
+        }
+
+        .bubble.status-idle {
+            border-color: rgba(107,114,128,0.2);
+            box-shadow: 
+                0 0 20px rgba(107,114,128,0.1),
+                inset 0 0 20px rgba(107,114,128,0.03);
+        }
+
+        .bubble:hover {
+            transform: scale(1.05);
+            z-index: 50;
+        }
+
+        .bubble.expanded {
+            transform: scale(1.15);
+            z-index: 100;
+        }
+
+        @keyframes pulse-active {
+            0%, 100% { 
+                box-shadow: 
+                    0 0 30px rgba(0,255,136,0.2),
+                    0 0 60px rgba(0,255,136,0.1),
+                    inset 0 0 30px rgba(0,255,136,0.05);
+            }
+            50% { 
+                box-shadow: 
+                    0 0 50px rgba(0,255,136,0.35),
+                    0 0 80px rgba(0,255,136,0.2),
+                    inset 0 0 40px rgba(0,255,136,0.1);
+            }
+        }
+
+        @keyframes pulse-error {
+            0%, 100% { 
+                box-shadow: 
+                    0 0 30px rgba(255,71,87,0.25),
+                    0 0 60px rgba(255,71,87,0.15),
+                    inset 0 0 30px rgba(255,71,87,0.08);
+            }
+            50% { 
+                box-shadow: 
+                    0 0 50px rgba(255,71,87,0.4),
+                    0 0 80px rgba(255,71,87,0.25),
+                    inset 0 0 40px rgba(255,71,87,0.15);
+            }
+        }
+
+        /* Bubble Content */
+        .bubble-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 2px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        .bubble-model {
+            font-size: 10px;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .bubble-cost {
+            font-size: 18px;
+            font-weight: 700;
+            color: #00D4FF;
+            margin-bottom: 2px;
+        }
+
+        .bubble-cost-change {
+            font-size: 10px;
+            margin-bottom: 6px;
+        }
+
+        .bubble-cost-change.positive { color: #00FF88; }
+        .bubble-cost-change.negative { color: #FF4757; }
+
+        .bubble-tokens {
+            font-size: 10px;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 4px;
+        }
+
+        .bubble-runtime {
+            font-size: 11px;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 6px;
+        }
+
+        .bubble-progress {
+            width: 80%;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 6px;
+        }
+
+        .bubble-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #00D4FF, #00FF88);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        .bubble-sparkline {
+            width: 80%;
+            height: 20px;
+            margin-top: 4px;
+        }
+
+        .bubble-error-icon {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 16px;
+            color: #FF4757;
+            animation: shake 0.5s ease-in-out infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-2px); }
+            75% { transform: translateX(2px); }
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(5,6,8,0.85);
+            backdrop-filter: blur(10px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: linear-gradient(135deg, rgba(20,22,28,0.95) 0%, rgba(10,12,16,0.95) 100%);
+            border: 1px solid rgba(0,212,255,0.2);
+            border-radius: 20px;
+            padding: 30px;
+            min-width: 450px;
+            max-width: 90vw;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.5), 0 0 40px rgba(0,212,255,0.1);
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+
+        .modal-title-section {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .modal-model {
+            font-size: 13px;
+            color: rgba(255,255,255,0.5);
+        }
+
+        .modal-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .modal-status.active { background: rgba(0,255,136,0.2); color: #00FF88; }
+        .modal-status.waiting { background: rgba(255,184,0,0.2); color: #FFB800; }
+        .modal-status.error { background: rgba(255,71,87,0.2); color: #FF4757; }
+        .modal-status.idle { background: rgba(107,114,128,0.2); color: #9CA3AF; }
+
+        .modal-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .modal-stat {
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .modal-stat-label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .modal-stat-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: #00D4FF;
+        }
+
+        .modal-stat-change {
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        .modal-stat-change.positive { color: #00FF88; }
+        .modal-stat-change.negative { color: #FF4757; }
+
+        .modal-activity {
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .modal-activity-label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .modal-activity-graph {
+            height: 60px;
+            display: flex;
+            align-items: flex-end;
+            gap: 3px;
+        }
+
+        .modal-activity-bar {
+            flex: 1;
+            background: linear-gradient(to top, rgba(0,212,255,0.3), rgba(0,212,255,0.8));
+            border-radius: 2px 2px 0 0;
+            transition: height 0.3s ease;
+        }
+
+        .modal-task {
+            background: rgba(0,212,255,0.05);
+            border: 1px solid rgba(0,212,255,0.1);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .modal-task-label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .modal-task-text {
+            font-size: 14px;
+            color: rgba(255,255,255,0.8);
+            line-height: 1.5;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: rgba(255,71,87,0.3);
+            transform: scale(1.1);
+        }
+
+        /* Background grid */
+        .grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+    
+    <div class="header">
+        <div class="logo">Agent Swarm <span>Bubbles</span></div>
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="totalAgents">0</div>
+                <div class="stat-label">Agents</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="totalCost">$0.00</div>
+                <div class="stat-label">Total Cost</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="activeCount">0</div>
+                <div class="stat-label">Active</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="totalTokens">0</div>
+                <div class="stat-label">Tokens</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div class="control-group">
+            <span class="control-label">Filter</span>
+            <button class="control-btn active" data-filter="all">All</button>
+            <button class="control-btn" data-filter="active">Active</button>
+            <button class="control-btn" data-filter="errors">Errors</button>
+        </div>
+        <div class="control-group">
+            <span class="control-label">Sort</span>
+            <button class="control-btn active" data-sort="cost">Cost</button>
+            <button class="control-btn" data-sort="runtime">Runtime</button>
+            <button class="control-btn" data-sort="tokens">Tokens</button>
+        </div>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item"><div class="legend-dot active"></div> Active</div>
+        <div class="legend-item"><div class="legend-dot waiting"></div> Waiting</div>
+        <div class="legend-item"><div class="legend-dot error"></div> Error</div>
+        <div class="legend-item"><div class="legend-dot idle"></div> Idle</div>
+    </div>
+
+    <div id="bubbleContainer"></div>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal" id="modal">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            <div class="modal-header">
+                <div class="modal-title-section">
+                    <div class="modal-title" id="modalTitle">Agent Name</div>
+                    <div class="modal-model" id="modalModel">Claude Opus 4</div>
+                </div>
+                <div class="modal-status" id="modalStatus">Active</div>
+            </div>
+            <div class="modal-grid">
+                <div class="modal-stat">
+                    <div class="modal-stat-label">Runtime</div>
+                    <div class="modal-stat-value" id="modalRuntime">0:00</div>
+                </div>
+                <div class="modal-stat">
+                    <div class="modal-stat-label">Cost</div>
+                    <div class="modal-stat-value" id="modalCost">$0.00</div>
+                    <div class="modal-stat-change positive" id="modalCostChange">+$0.00/min</div>
+                </div>
+                <div class="modal-stat">
+                    <div class="modal-stat-label">Completion</div>
+                    <div class="modal-stat-value" id="modalCompletion">0%</div>
+                </div>
+                <div class="modal-stat">
+                    <div class="modal-stat-label">Tokens In</div>
+                    <div class="modal-stat-value" id="modalTokensIn">0</div>
+                </div>
+                <div class="modal-stat">
+                    <div class="modal-stat-label">Tokens Out</div>
+                    <div class="modal-stat-value" id="modalTokensOut">0</div>
+                </div>
+                <div class="modal-stat">
+                    <div class="modal-stat-label">API Calls</div>
+                    <div class="modal-stat-value" id="modalCalls">0</div>
+                </div>
+            </div>
+            <div class="modal-activity">
+                <div class="modal-activity-label">Activity (Last 30s)</div>
+                <div class="modal-activity-graph" id="modalActivityGraph"></div>
+            </div>
+            <div class="modal-task">
+                <div class="modal-task-label">Current Task</div>
+                <div class="modal-task-text" id="modalTask">-</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock agent data with more details
+        const agents = [
+            { id: 1, name: 'Main Orchestrator', model: 'Claude Opus 4', status: 'active', activity: 0.9, cost: 4.87, costRate: 0.12, runtime: 847, tokensIn: 89000, tokensOut: 36000, calls: 23, completion: 67, task: 'Analyzing codebase and generating documentation for the API module', history: [] },
+            { id: 2, name: 'Code Analyzer', model: 'Claude Sonnet 4', status: 'active', activity: 0.7, cost: 1.23, costRate: 0.05, runtime: 423, tokensIn: 45000, tokensOut: 22000, calls: 45, completion: 82, task: 'Running automated tests and fixing failing edge cases', history: [] },
+            { id: 3, name: 'Planner', model: 'GPT-4o', status: 'waiting', activity: 0.3, cost: 2.15, costRate: 0.08, runtime: 156, tokensIn: 28000, tokensOut: 6000, calls: 12, completion: 45, task: 'Waiting for human approval on deployment plan', history: [] },
+            { id: 4, name: 'Event Router', model: 'Claude Haiku', status: 'active', activity: 0.5, cost: 0.18, costRate: 0.01, runtime: 1203, tokensIn: 67000, tokensOut: 22000, calls: 156, completion: 91, task: 'Processing incoming webhook events and routing messages', history: [] },
+            { id: 5, name: 'Research Agent', model: 'Claude Opus 4', status: 'error', activity: 0.8, cost: 0.89, costRate: 0.0, runtime: 89, tokensIn: 19000, tokensOut: 4000, calls: 8, completion: 34, task: 'ERROR: Rate limit exceeded on external API', history: [] },
+            { id: 6, name: 'Security Scanner', model: 'GPT-4 Turbo', status: 'active', activity: 0.6, cost: 0.67, costRate: 0.03, runtime: 312, tokensIn: 34000, tokensOut: 11000, calls: 19, completion: 55, task: 'Reviewing pull request #847 for security vulnerabilities', history: [] },
+            { id: 7, name: 'Data Pipeline', model: 'Claude Haiku', status: 'idle', activity: 0.1, cost: 0.03, costRate: 0.0, runtime: 0, tokensIn: 800, tokensOut: 400, calls: 2, completion: 100, task: 'Idle - waiting for scheduled trigger at 14:00', history: [] },
+            { id: 8, name: 'Email Composer', model: 'Claude Sonnet 4', status: 'waiting', activity: 0.4, cost: 0.34, costRate: 0.02, runtime: 67, tokensIn: 8900, tokensOut: 3100, calls: 7, completion: 78, task: 'Composing response draft, awaiting user confirmation', history: [] },
+            { id: 9, name: 'Report Generator', model: 'Claude Opus 4', status: 'active', activity: 0.65, cost: 0.98, costRate: 0.04, runtime: 234, tokensIn: 42000, tokensOut: 14000, calls: 31, completion: 62, task: 'Generating weekly report summary from collected metrics', history: [] },
+            { id: 10, name: 'Monitor Bot', model: 'GPT-4o Mini', status: 'active', activity: 0.4, cost: 0.08, costRate: 0.005, runtime: 3600, tokensIn: 12000, tokensOut: 3000, calls: 89, completion: 100, task: 'Continuous system health monitoring', history: [] },
+        ];
+
+        // Initialize activity history
+        agents.forEach(agent => {
+            agent.history = Array.from({length: 30}, () => Math.random() * agent.activity);
+        });
+
+        const statusColors = {
+            active: '#00FF88',
+            waiting: '#FFB800',
+            error: '#FF4757',
+            idle: '#6B7280'
+        };
+
+        let currentFilter = 'all';
+        let currentSort = 'cost';
+        let expandedBubble = null;
+        let bubbleElements = [];
+
+        // Physics simulation
+        class BubblePhysics {
+            constructor(element, agent, index, total) {
+                this.element = element;
+                this.agent = agent;
+                this.size = this.calculateSize(agent);
+                
+                // Random initial position
+                const centerX = window.innerWidth / 2;
+                const centerY = window.innerHeight / 2;
+                const angle = (index / total) * Math.PI * 2;
+                const radius = Math.min(window.innerWidth, window.innerHeight) * 0.25;
+                
+                this.x = centerX + Math.cos(angle) * radius + (Math.random() - 0.5) * 100;
+                this.y = centerY + Math.sin(angle) * radius + (Math.random() - 0.5) * 100;
+                this.vx = (Math.random() - 0.5) * 2;
+                this.vy = (Math.random() - 0.5) * 2;
+                
+                this.updateElement();
+            }
+
+            calculateSize(agent) {
+                // Size based on cost (more cost = bigger bubble)
+                const minSize = 120;
+                const maxSize = 220;
+                const maxCost = Math.max(...agents.map(a => a.cost));
+                const normalized = agent.cost / maxCost;
+                return minSize + normalized * (maxSize - minSize);
+            }
+
+            update(allBubbles) {
+                // Apply gentle random force
+                this.vx += (Math.random() - 0.5) * 0.1;
+                this.vy += (Math.random() - 0.5) * 0.1;
+                
+                // Damping
+                this.vx *= 0.98;
+                this.vy *= 0.98;
+                
+                // Speed limit
+                const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+                if (speed > 1.5) {
+                    this.vx = (this.vx / speed) * 1.5;
+                    this.vy = (this.vy / speed) * 1.5;
+                }
+
+                // Wall boundaries with padding
+                const padding = 100;
+                const halfSize = this.size / 2;
+                
+                if (this.x - halfSize < padding) { this.x = padding + halfSize; this.vx *= -0.5; }
+                if (this.x + halfSize > window.innerWidth - padding) { this.x = window.innerWidth - padding - halfSize; this.vx *= -0.5; }
+                if (this.y - halfSize < padding + 50) { this.y = padding + 50 + halfSize; this.vy *= -0.5; }
+                if (this.y + halfSize > window.innerHeight - 50) { this.y = window.innerHeight - 50 - halfSize; this.vy *= -0.5; }
+
+                // Collision with other bubbles
+                for (const other of allBubbles) {
+                    if (other === this || !other.element.style.display !== 'none') continue;
+                    
+                    const dx = other.x - this.x;
+                    const dy = other.y - this.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const minDist = (this.size + other.size) / 2 + 15;
+                    
+                    if (dist < minDist && dist > 0) {
+                        const nx = dx / dist;
+                        const ny = dy / dist;
+                        const overlap = (minDist - dist) / 2;
+                        
+                        this.x -= overlap * nx * 0.5;
+                        this.y -= overlap * ny * 0.5;
+                        other.x += overlap * nx * 0.5;
+                        other.y += overlap * ny * 0.5;
+                        
+                        // Bounce
+                        const dvx = this.vx - other.vx;
+                        const dvy = this.vy - other.vy;
+                        const dvn = dvx * nx + dvy * ny;
+                        
+                        if (dvn > 0) {
+                            this.vx -= 0.5 * dvn * nx;
+                            this.vy -= 0.5 * dvn * ny;
+                            other.vx += 0.5 * dvn * nx;
+                            other.vy += 0.5 * dvn * ny;
+                        }
+                    }
+                }
+
+                this.x += this.vx;
+                this.y += this.vy;
+                
+                this.updateElement();
+            }
+
+            updateElement() {
+                this.element.style.width = this.size + 'px';
+                this.element.style.height = this.size + 'px';
+                this.element.style.left = (this.x - this.size / 2) + 'px';
+                this.element.style.top = (this.y - this.size / 2) + 'px';
+            }
+
+            updateSize() {
+                this.size = this.calculateSize(this.agent);
+                this.updateElement();
+            }
+        }
+
+        function createBubble(agent) {
+            const bubble = document.createElement('div');
+            bubble.className = `bubble status-${agent.status}`;
+            bubble.dataset.agentId = agent.id;
+            
+            const totalTokens = agent.tokensIn + agent.tokensOut;
+            const costChange = agent.costRate > 0 ? `+$${agent.costRate.toFixed(3)}/m` : '—';
+            const costClass = agent.costRate > 0 ? 'positive' : '';
+            
+            bubble.innerHTML = `
+                ${agent.status === 'error' ? '<div class="bubble-error-icon">⚠️</div>' : ''}
+                <div class="bubble-name">${agent.name}</div>
+                <div class="bubble-model">${agent.model}</div>
+                <div class="bubble-cost">$${agent.cost.toFixed(2)}</div>
+                <div class="bubble-cost-change ${costClass}">${costChange}</div>
+                <div class="bubble-tokens">${formatTokens(agent.tokensIn)} in / ${formatTokens(agent.tokensOut)} out</div>
+                <div class="bubble-runtime">${formatTime(agent.runtime)}</div>
+                <div class="bubble-progress">
+                    <div class="bubble-progress-bar" style="width: ${agent.completion}%"></div>
+                </div>
+                <canvas class="bubble-sparkline" width="80" height="20"></canvas>
+            `;
+            
+            bubble.addEventListener('click', () => showModal(agent));
+            
+            document.getElementById('bubbleContainer').appendChild(bubble);
+            
+            // Draw sparkline
+            drawSparkline(bubble.querySelector('.bubble-sparkline'), agent.history, agent.status);
+            
+            return bubble;
+        }
+
+        function drawSparkline(canvas, data, status) {
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            const color = statusColors[status];
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            const max = Math.max(...data, 0.1);
+            const step = width / (data.length - 1);
+            
+            // Fill
+            ctx.beginPath();
+            ctx.moveTo(0, height);
+            data.forEach((val, i) => {
+                ctx.lineTo(i * step, height - (val / max) * height * 0.9);
+            });
+            ctx.lineTo(width, height);
+            ctx.closePath();
+            ctx.fillStyle = color + '20';
+            ctx.fill();
+            
+            // Line
+            ctx.beginPath();
+            data.forEach((val, i) => {
+                const x = i * step;
+                const y = height - (val / max) * height * 0.9;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+        }
+
+        function formatTokens(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
+            return num.toString();
+        }
+
+        function formatTime(seconds) {
+            if (seconds >= 3600) {
+                const hrs = Math.floor(seconds / 3600);
+                const mins = Math.floor((seconds % 3600) / 60);
+                return `${hrs}h ${mins}m`;
+            }
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}m ${secs.toString().padStart(2, '0')}s`;
+        }
+
+        function updateStats() {
+            const visible = getFilteredAgents();
+            document.getElementById('totalAgents').textContent = visible.length;
+            document.getElementById('totalCost').textContent = '$' + visible.reduce((sum, a) => sum + a.cost, 0).toFixed(2);
+            document.getElementById('activeCount').textContent = visible.filter(a => a.status === 'active').length;
+            document.getElementById('totalTokens').textContent = formatTokens(visible.reduce((sum, a) => sum + a.tokensIn + a.tokensOut, 0));
+        }
+
+        function getFilteredAgents() {
+            let filtered = [...agents];
+            
+            if (currentFilter === 'active') {
+                filtered = filtered.filter(a => a.status === 'active');
+            } else if (currentFilter === 'errors') {
+                filtered = filtered.filter(a => a.status === 'error');
+            }
+            
+            if (currentSort === 'cost') {
+                filtered.sort((a, b) => b.cost - a.cost);
+            } else if (currentSort === 'runtime') {
+                filtered.sort((a, b) => b.runtime - a.runtime);
+            } else if (currentSort === 'tokens') {
+                filtered.sort((a, b) => (b.tokensIn + b.tokensOut) - (a.tokensIn + a.tokensOut));
+            }
+            
+            return filtered;
+        }
+
+        function updateBubbleVisibility() {
+            const filtered = getFilteredAgents();
+            const filteredIds = filtered.map(a => a.id);
+            
+            bubbleElements.forEach(b => {
+                if (filteredIds.includes(b.agent.id)) {
+                    b.element.style.display = 'flex';
+                } else {
+                    b.element.style.display = 'none';
+                }
+            });
+            
+            updateStats();
+        }
+
+        function updateBubbleContent(bubbleObj) {
+            const agent = bubbleObj.agent;
+            const bubble = bubbleObj.element;
+            
+            const totalTokens = agent.tokensIn + agent.tokensOut;
+            const costChange = agent.costRate > 0 ? `+$${agent.costRate.toFixed(3)}/m` : '—';
+            const costClass = agent.costRate > 0 ? 'positive' : '';
+            
+            bubble.querySelector('.bubble-cost').textContent = `$${agent.cost.toFixed(2)}`;
+            bubble.querySelector('.bubble-cost-change').textContent = costChange;
+            bubble.querySelector('.bubble-cost-change').className = `bubble-cost-change ${costClass}`;
+            bubble.querySelector('.bubble-tokens').textContent = `${formatTokens(agent.tokensIn)} in / ${formatTokens(agent.tokensOut)} out`;
+            bubble.querySelector('.bubble-runtime').textContent = formatTime(agent.runtime);
+            bubble.querySelector('.bubble-progress-bar').style.width = agent.completion + '%';
+            
+            // Update sparkline
+            drawSparkline(bubble.querySelector('.bubble-sparkline'), agent.history, agent.status);
+            
+            // Update size based on new cost
+            bubbleObj.updateSize();
+        }
+
+        // Modal functions
+        function showModal(agent) {
+            const overlay = document.getElementById('modalOverlay');
+            document.getElementById('modalTitle').textContent = agent.name;
+            document.getElementById('modalModel').textContent = agent.model;
+            document.getElementById('modalStatus').textContent = agent.status;
+            document.getElementById('modalStatus').className = 'modal-status ' + agent.status;
+            document.getElementById('modalRuntime').textContent = formatTime(agent.runtime);
+            document.getElementById('modalCost').textContent = '$' + agent.cost.toFixed(2);
+            document.getElementById('modalCostChange').textContent = agent.costRate > 0 ? `+$${agent.costRate.toFixed(3)}/min` : '—';
+            document.getElementById('modalCostChange').className = `modal-stat-change ${agent.costRate > 0 ? 'positive' : ''}`;
+            document.getElementById('modalCompletion').textContent = agent.completion + '%';
+            document.getElementById('modalTokensIn').textContent = formatTokens(agent.tokensIn);
+            document.getElementById('modalTokensOut').textContent = formatTokens(agent.tokensOut);
+            document.getElementById('modalCalls').textContent = agent.calls;
+            document.getElementById('modalTask').textContent = agent.task;
+            
+            // Activity graph
+            const graphContainer = document.getElementById('modalActivityGraph');
+            graphContainer.innerHTML = '';
+            agent.history.forEach(val => {
+                const bar = document.createElement('div');
+                bar.className = 'modal-activity-bar';
+                bar.style.height = (val * 100) + '%';
+                graphContainer.appendChild(bar);
+            });
+            
+            overlay.style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').style.display = 'none';
+        }
+
+        document.getElementById('modalOverlay').addEventListener('click', (e) => {
+            if (e.target.id === 'modalOverlay') closeModal();
+        });
+
+        // Control buttons
+        document.querySelectorAll('.control-btn[data-filter]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.control-btn[data-filter]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.filter;
+                updateBubbleVisibility();
+            });
+        });
+
+        document.querySelectorAll('.control-btn[data-sort]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.control-btn[data-sort]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentSort = btn.dataset.sort;
+                updateBubbleVisibility();
+            });
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        // Initialize
+        function init() {
+            agents.forEach((agent, index) => {
+                const element = createBubble(agent);
+                const physics = new BubblePhysics(element, agent, index, agents.length);
+                bubbleElements.push(physics);
+            });
+            
+            updateStats();
+        }
+
+        // Animation loop
+        function animate() {
+            bubbleElements.forEach(bubble => {
+                if (bubble.element.style.display !== 'none') {
+                    bubble.update(bubbleElements.filter(b => b.element.style.display !== 'none'));
+                }
+            });
+            requestAnimationFrame(animate);
+        }
+
+        // Simulate activity
+        setInterval(() => {
+            agents.forEach(agent => {
+                if (agent.status === 'active') {
+                    agent.cost += agent.costRate / 60;
+                    agent.tokensIn += Math.floor(Math.random() * 200);
+                    agent.tokensOut += Math.floor(Math.random() * 80);
+                    agent.runtime++;
+                    
+                    // Update completion
+                    if (agent.completion < 100) {
+                        agent.completion = Math.min(100, agent.completion + Math.random() * 0.5);
+                    }
+                }
+                
+                // Update history
+                const newActivity = agent.status === 'active' ? 0.3 + Math.random() * 0.7 : 
+                                   agent.status === 'waiting' ? 0.1 + Math.random() * 0.3 : 
+                                   agent.status === 'error' ? Math.random() * 0.5 : 
+                                   Math.random() * 0.1;
+                agent.history.shift();
+                agent.history.push(newActivity);
+            });
+            
+            bubbleElements.forEach(b => updateBubbleContent(b));
+            updateStats();
+        }, 1000);
+
+        // Start
+        init();
+        animate();
+    </script>
+</body>
+</html>
