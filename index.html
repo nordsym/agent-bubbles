@@ -3,8 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agent Swarm Bubbles</title>
+    <title>Agent Swarm Bubbles - NordSym</title>
+    
+    <!-- NordSym Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@700&family=Inter:wght@300;400;500;600;700;800&family=Source+Code+Pro:wght@400;700&display=swap" rel="stylesheet">
+    
     <style>
+        /* ============================================
+           NORDSYM DESIGN TOKENS
+           Premium Glass Orb Edition
+           ============================================ */
+        :root {
+            /* === DARK MODE (Deep Space / Obsidian) === */
+            --nord-deep-space: #050608;
+            --nord-mid-space: #0c1427;
+            --nord-surface: rgba(12, 14, 18, 0.85);
+            --nord-surface-hover: rgba(12, 14, 18, 0.95);
+            
+            /* Accent Colors */
+            --nord-cyan: #00D4FF;
+            --nord-cyan-rgb: 0, 212, 255;
+            --nord-light-accent: #7dd3fc;
+            --nord-orange: #FF8C00;
+            --nord-purple: #9370DB;
+            
+            /* Status Colors */
+            --status-active: #00FF88;
+            --status-active-rgb: 0, 255, 136;
+            --status-waiting: #FFB800;
+            --status-waiting-rgb: 255, 184, 0;
+            --status-error: #FF4757;
+            --status-error-rgb: 255, 71, 87;
+            --status-idle: #6B7280;
+            --status-idle-rgb: 107, 114, 128;
+            
+            /* Text Colors */
+            --nord-text-primary: #FFFFFF;
+            --nord-text-secondary: #E2E8F0;
+            --nord-text-medium: #CBD5E1;
+            --nord-text-muted: rgba(255, 255, 255, 0.5);
+            
+            /* Borders & Lines */
+            --nord-border: rgba(255, 255, 255, 0.1);
+            --nord-border-hover: rgba(255, 255, 255, 0.2);
+            --nord-border-accent: rgba(0, 212, 255, 0.3);
+            
+            /* === LIGHT MODE (Blåkopia / Blueprint) === */
+            --blueprint-bg: #F0F4F8;
+            --blueprint-ink: #0F172A;
+            --blueprint-text-primary: #1E293B;
+            --blueprint-text-secondary: #475569;
+            --blueprint-lines: #94A3B8;
+            --blueprint-lines-faint: #CBD5E1;
+            --blueprint-cyan: #0284C7;
+            --blueprint-cyan-rgb: 2, 132, 199;
+            
+            /* Shadows */
+            --shadow-card: 0 20px 40px -10px rgba(0,0,0,0.8);
+            --shadow-card-hover: 0 30px 60px -12px rgba(0,0,0,0.9);
+            --shadow-glow: 0 0 30px rgba(0, 212, 255, 0.2);
+            
+            /* Borders */
+            --radius-card: 2rem;
+            --radius-card-sm: 1.5rem;
+            --radius-pill: 9999px;
+            
+            /* Glassmorphism */
+            --glass-blur: blur(20px);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -12,11 +81,35 @@
         }
 
         body {
-            background: #050608;
-            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--nord-deep-space);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             overflow: hidden;
-            color: #fff;
+            color: var(--nord-text-primary);
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
         }
+
+        /* Light Mode */
+        body.light-theme {
+            background-color: var(--blueprint-bg);
+            color: var(--blueprint-ink);
+            background-image: none;
+        }
+
+        /* Blueprint Grid (Light Mode Only) */
+        .blueprint-grid {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(rgba(148, 163, 184, 0.15) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(148, 163, 184, 0.15) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: -6;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        body.light-theme .blueprint-grid { opacity: 1; }
 
         #bubbleContainer {
             position: fixed;
@@ -27,6 +120,9 @@
             overflow: hidden;
         }
 
+        /* ============================================
+           HEADER - NordSym Style
+           ============================================ */
         .header {
             position: fixed;
             top: 0;
@@ -38,18 +134,33 @@
             align-items: center;
             z-index: 100;
             background: linear-gradient(to bottom, rgba(5,6,8,0.95) 0%, rgba(5,6,8,0.7) 70%, transparent 100%);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+        }
+
+        body.light-theme .header {
+            background: linear-gradient(to bottom, rgba(240,244,248,0.95) 0%, rgba(240,244,248,0.7) 70%, transparent 100%);
+            border-bottom: 1px solid var(--blueprint-lines);
         }
 
         .logo {
+            font-family: 'Comfortaa', sans-serif;
             font-size: 24px;
             font-weight: 700;
-            color: #00D4FF;
+            color: var(--nord-cyan);
             letter-spacing: -0.5px;
         }
 
         .logo span {
-            color: #fff;
+            color: var(--nord-text-primary);
             opacity: 0.7;
+        }
+
+        body.light-theme .logo {
+            color: var(--blueprint-cyan);
+        }
+        body.light-theme .logo span {
+            color: var(--blueprint-ink);
         }
 
         .stats {
@@ -62,19 +173,30 @@
         }
 
         .stat-value {
+            font-family: 'Source Code Pro', monospace;
             font-size: 24px;
             font-weight: 600;
-            color: #00D4FF;
+            color: var(--nord-cyan);
+        }
+
+        body.light-theme .stat-value {
+            color: var(--blueprint-cyan);
         }
 
         .stat-label {
             font-size: 12px;
-            color: rgba(255,255,255,0.5);
+            color: var(--nord-text-muted);
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
-        /* Controls */
+        body.light-theme .stat-label {
+            color: var(--blueprint-text-secondary);
+        }
+
+        /* ============================================
+           CONTROLS - NordSym Glassmorphism
+           ============================================ */
         .controls {
             position: fixed;
             top: 80px;
@@ -87,18 +209,26 @@
         .control-group {
             display: flex;
             gap: 5px;
-            background: rgba(255,255,255,0.05);
+            background: var(--nord-surface);
             padding: 5px;
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: var(--radius-card-sm);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--nord-border);
+        }
+
+        body.light-theme .control-group {
+            background: #ffffff;
+            border: 2px solid var(--blueprint-lines);
+            box-shadow: 4px 4px 0px rgba(148, 163, 184, 0.2);
         }
 
         .control-btn {
             padding: 8px 16px;
             border: none;
             background: transparent;
-            color: rgba(255,255,255,0.6);
+            color: var(--nord-text-medium);
+            font-family: 'Inter', sans-serif;
             font-size: 13px;
             font-weight: 500;
             cursor: pointer;
@@ -108,17 +238,29 @@
 
         .control-btn:hover {
             background: rgba(255,255,255,0.1);
-            color: #fff;
+            color: var(--nord-text-primary);
         }
 
         .control-btn.active {
             background: rgba(0,212,255,0.2);
-            color: #00D4FF;
+            color: var(--nord-cyan);
+        }
+
+        body.light-theme .control-btn {
+            color: var(--blueprint-text-secondary);
+        }
+        body.light-theme .control-btn:hover {
+            background: rgba(2, 132, 199, 0.1);
+            color: var(--blueprint-ink);
+        }
+        body.light-theme .control-btn.active {
+            background: var(--blueprint-cyan);
+            color: #ffffff;
         }
 
         .control-label {
             padding: 8px 12px;
-            color: rgba(255,255,255,0.4);
+            color: var(--nord-text-muted);
             font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -126,6 +268,51 @@
             align-items: center;
         }
 
+        /* Theme Toggle */
+        .theme-toggle {
+            position: fixed;
+            top: 80px;
+            right: 30px;
+            z-index: 100;
+        }
+
+        .theme-toggle-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: var(--nord-surface);
+            border: 1px solid var(--nord-border);
+            border-radius: var(--radius-pill);
+            color: var(--nord-text-secondary);
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            cursor: pointer;
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle-btn:hover {
+            border-color: var(--nord-cyan);
+            color: var(--nord-cyan);
+        }
+
+        body.light-theme .theme-toggle-btn {
+            background: #ffffff;
+            border: 2px solid var(--blueprint-lines);
+            color: var(--blueprint-ink);
+            box-shadow: 4px 4px 0px rgba(148, 163, 184, 0.2);
+        }
+
+        body.light-theme .theme-toggle-btn:hover {
+            border-color: var(--blueprint-cyan);
+            color: var(--blueprint-cyan);
+        }
+
+        /* ============================================
+           LEGEND - NordSym Style
+           ============================================ */
         .legend {
             position: fixed;
             bottom: 20px;
@@ -140,7 +327,11 @@
             align-items: center;
             gap: 8px;
             font-size: 13px;
-            color: rgba(255,255,255,0.6);
+            color: var(--nord-text-medium);
+        }
+
+        body.light-theme .legend-item {
+            color: var(--blueprint-text-secondary);
         }
 
         .legend-dot {
@@ -149,194 +340,394 @@
             border-radius: 50%;
         }
 
-        .legend-dot.active { background: #00FF88; box-shadow: 0 0 10px #00FF88; }
-        .legend-dot.waiting { background: #FFB800; box-shadow: 0 0 10px #FFB800; }
-        .legend-dot.error { background: #FF4757; box-shadow: 0 0 10px #FF4757; }
-        .legend-dot.idle { background: #6B7280; box-shadow: 0 0 10px #6B7280; }
+        .legend-dot.active { background: var(--status-active); box-shadow: 0 0 10px var(--status-active); }
+        .legend-dot.waiting { background: var(--status-waiting); box-shadow: 0 0 10px var(--status-waiting); }
+        .legend-dot.error { background: var(--status-error); box-shadow: 0 0 10px var(--status-error); }
+        .legend-dot.idle { background: var(--status-idle); box-shadow: 0 0 10px var(--status-idle); }
 
-        /* Glassmorphism Bubble */
+        /* ============================================
+           BUBBLE - Premium 3D Glass Orb
+           ============================================ */
         .bubble {
             position: absolute;
             border-radius: 50%;
             cursor: pointer;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 15px;
             user-select: none;
+            overflow: hidden;
             
-            /* Glassmorphism */
-            background: rgba(20, 25, 35, 0.4);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.1);
+            /* Base styling - will be overwritten by status */
+            background: radial-gradient(circle at 30% 30%, 
+                rgba(255,255,255,0.15) 0%, 
+                rgba(255,255,255,0.05) 20%, 
+                rgba(0,0,0,0.2) 60%,
+                rgba(0,0,0,0.4) 100%);
+            
+            /* Smooth transitions */
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                        box-shadow 0.4s ease,
+                        filter 0.3s ease;
         }
 
+        /* Inner content wrapper - keeps text inside */
+        .bubble-content {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            padding: 15%;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        /* Glass highlight - top left shine */
         .bubble::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 8%;
+            left: 15%;
+            width: 35%;
+            height: 25%;
+            background: radial-gradient(ellipse at center,
+                rgba(255,255,255,0.6) 0%,
+                rgba(255,255,255,0.3) 30%,
+                transparent 70%);
             border-radius: 50%;
-            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
             pointer-events: none;
+            z-index: 3;
+            filter: blur(2px);
         }
 
+        /* Inner depth shadow */
+        .bubble::after {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 70% 70%,
+                rgba(0,0,0,0.3) 0%,
+                transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* ============================================
+           STATUS-SPECIFIC 3D GLASS STYLES
+           ============================================ */
         .bubble.status-active {
-            border-color: rgba(0,255,136,0.3);
+            background: radial-gradient(circle at 30% 30%, 
+                rgba(0, 255, 136, 0.25) 0%, 
+                rgba(0, 255, 136, 0.1) 25%, 
+                rgba(0, 80, 50, 0.3) 60%,
+                rgba(0, 40, 25, 0.5) 100%);
             box-shadow: 
-                0 0 30px rgba(0,255,136,0.2),
-                0 0 60px rgba(0,255,136,0.1),
-                inset 0 0 30px rgba(0,255,136,0.05);
-            animation: pulse-active 2s ease-in-out infinite;
+                0 0 60px rgba(0, 255, 136, 0.25),
+                0 0 120px rgba(0, 255, 136, 0.1),
+                inset 0 0 40px rgba(0, 255, 136, 0.1),
+                inset 0 -20px 40px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            animation: pulse-glow-active 3s ease-in-out infinite;
         }
 
         .bubble.status-waiting {
-            border-color: rgba(255,184,0,0.3);
+            background: radial-gradient(circle at 30% 30%, 
+                rgba(255, 184, 0, 0.25) 0%, 
+                rgba(255, 184, 0, 0.1) 25%, 
+                rgba(100, 70, 0, 0.3) 60%,
+                rgba(50, 35, 0, 0.5) 100%);
             box-shadow: 
-                0 0 30px rgba(255,184,0,0.15),
-                0 0 60px rgba(255,184,0,0.08),
-                inset 0 0 30px rgba(255,184,0,0.05);
+                0 0 50px rgba(255, 184, 0, 0.2),
+                0 0 100px rgba(255, 184, 0, 0.08),
+                inset 0 0 35px rgba(255, 184, 0, 0.1),
+                inset 0 -20px 40px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 184, 0, 0.3);
         }
 
         .bubble.status-error {
-            border-color: rgba(255,71,87,0.4);
+            background: radial-gradient(circle at 30% 30%, 
+                rgba(255, 71, 87, 0.3) 0%, 
+                rgba(255, 71, 87, 0.15) 25%, 
+                rgba(100, 20, 25, 0.35) 60%,
+                rgba(50, 10, 12, 0.5) 100%);
             box-shadow: 
-                0 0 30px rgba(255,71,87,0.25),
-                0 0 60px rgba(255,71,87,0.15),
-                inset 0 0 30px rgba(255,71,87,0.08);
-            animation: pulse-error 1s ease-in-out infinite;
+                0 0 60px rgba(255, 71, 87, 0.3),
+                0 0 120px rgba(255, 71, 87, 0.15),
+                inset 0 0 40px rgba(255, 71, 87, 0.15),
+                inset 0 -20px 40px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 71, 87, 0.4);
+            animation: pulse-glow-error 1.5s ease-in-out infinite;
         }
 
         .bubble.status-idle {
-            border-color: rgba(107,114,128,0.2);
+            background: radial-gradient(circle at 30% 30%, 
+                rgba(107, 114, 128, 0.2) 0%, 
+                rgba(107, 114, 128, 0.08) 25%, 
+                rgba(40, 45, 50, 0.3) 60%,
+                rgba(20, 22, 25, 0.5) 100%);
             box-shadow: 
-                0 0 20px rgba(107,114,128,0.1),
-                inset 0 0 20px rgba(107,114,128,0.03);
+                0 0 30px rgba(107, 114, 128, 0.1),
+                inset 0 0 25px rgba(107, 114, 128, 0.05),
+                inset 0 -20px 40px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(107, 114, 128, 0.2);
         }
 
+        /* Light mode glass orbs */
+        body.light-theme .bubble.status-active {
+            background: radial-gradient(circle at 30% 30%, 
+                rgba(255, 255, 255, 0.9) 0%, 
+                rgba(0, 255, 136, 0.2) 30%, 
+                rgba(0, 200, 100, 0.3) 70%,
+                rgba(0, 150, 75, 0.4) 100%);
+            box-shadow: 
+                0 8px 32px rgba(0, 255, 136, 0.3),
+                0 0 60px rgba(0, 255, 136, 0.15),
+                inset 0 2px 10px rgba(255, 255, 255, 0.8),
+                inset 0 -15px 30px rgba(0, 150, 75, 0.2);
+            border: 2px solid rgba(0, 255, 136, 0.5);
+        }
+
+        body.light-theme .bubble.status-waiting {
+            background: radial-gradient(circle at 30% 30%, 
+                rgba(255, 255, 255, 0.9) 0%, 
+                rgba(255, 184, 0, 0.2) 30%, 
+                rgba(220, 160, 0, 0.3) 70%,
+                rgba(180, 130, 0, 0.4) 100%);
+            box-shadow: 
+                0 8px 32px rgba(255, 184, 0, 0.25),
+                0 0 50px rgba(255, 184, 0, 0.1),
+                inset 0 2px 10px rgba(255, 255, 255, 0.8),
+                inset 0 -15px 30px rgba(180, 130, 0, 0.2);
+            border: 2px solid rgba(255, 184, 0, 0.5);
+        }
+
+        body.light-theme .bubble.status-error {
+            background: radial-gradient(circle at 30% 30%, 
+                rgba(255, 255, 255, 0.9) 0%, 
+                rgba(255, 71, 87, 0.25) 30%, 
+                rgba(220, 50, 65, 0.35) 70%,
+                rgba(180, 40, 50, 0.45) 100%);
+            box-shadow: 
+                0 8px 32px rgba(255, 71, 87, 0.3),
+                0 0 60px rgba(255, 71, 87, 0.15),
+                inset 0 2px 10px rgba(255, 255, 255, 0.8),
+                inset 0 -15px 30px rgba(180, 40, 50, 0.2);
+            border: 2px solid rgba(255, 71, 87, 0.5);
+        }
+
+        body.light-theme .bubble.status-idle {
+            background: radial-gradient(circle at 30% 30%, 
+                rgba(255, 255, 255, 0.9) 0%, 
+                rgba(148, 163, 184, 0.2) 30%, 
+                rgba(120, 135, 160, 0.3) 70%,
+                rgba(100, 115, 140, 0.4) 100%);
+            box-shadow: 
+                0 8px 25px rgba(107, 114, 128, 0.2),
+                inset 0 2px 10px rgba(255, 255, 255, 0.8),
+                inset 0 -15px 30px rgba(100, 115, 140, 0.15);
+            border: 2px solid rgba(148, 163, 184, 0.4);
+        }
+
+        /* Hover states */
         .bubble:hover {
-            transform: scale(1.05);
+            transform: scale(1.08);
             z-index: 50;
+            filter: brightness(1.1);
+        }
+
+        .bubble:hover .bubble-content {
+            opacity: 1;
+        }
+
+        .bubble:hover .bubble-hover-info {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        body.light-theme .bubble:hover {
+            transform: scale(1.08);
+            filter: brightness(1.05);
         }
 
         .bubble.expanded {
-            transform: scale(1.15);
+            transform: scale(1.2);
             z-index: 100;
         }
 
-        @keyframes pulse-active {
+        /* Animations */
+        @keyframes pulse-glow-active {
             0%, 100% { 
                 box-shadow: 
-                    0 0 30px rgba(0,255,136,0.2),
-                    0 0 60px rgba(0,255,136,0.1),
-                    inset 0 0 30px rgba(0,255,136,0.05);
+                    0 0 60px rgba(0, 255, 136, 0.25),
+                    0 0 120px rgba(0, 255, 136, 0.1),
+                    inset 0 0 40px rgba(0, 255, 136, 0.1),
+                    inset 0 -20px 40px rgba(0, 0, 0, 0.3);
             }
             50% { 
                 box-shadow: 
-                    0 0 50px rgba(0,255,136,0.35),
-                    0 0 80px rgba(0,255,136,0.2),
-                    inset 0 0 40px rgba(0,255,136,0.1);
+                    0 0 80px rgba(0, 255, 136, 0.35),
+                    0 0 150px rgba(0, 255, 136, 0.15),
+                    inset 0 0 50px rgba(0, 255, 136, 0.15),
+                    inset 0 -20px 40px rgba(0, 0, 0, 0.3);
             }
         }
 
-        @keyframes pulse-error {
+        @keyframes pulse-glow-error {
             0%, 100% { 
                 box-shadow: 
-                    0 0 30px rgba(255,71,87,0.25),
-                    0 0 60px rgba(255,71,87,0.15),
-                    inset 0 0 30px rgba(255,71,87,0.08);
+                    0 0 60px rgba(255, 71, 87, 0.3),
+                    0 0 120px rgba(255, 71, 87, 0.15),
+                    inset 0 0 40px rgba(255, 71, 87, 0.15),
+                    inset 0 -20px 40px rgba(0, 0, 0, 0.3);
             }
             50% { 
                 box-shadow: 
-                    0 0 50px rgba(255,71,87,0.4),
-                    0 0 80px rgba(255,71,87,0.25),
-                    inset 0 0 40px rgba(255,71,87,0.15);
+                    0 0 80px rgba(255, 71, 87, 0.45),
+                    0 0 150px rgba(255, 71, 87, 0.2),
+                    inset 0 0 50px rgba(255, 71, 87, 0.2),
+                    inset 0 -20px 40px rgba(0, 0, 0, 0.3);
             }
         }
 
-        /* Bubble Content */
-        .bubble-name {
-            font-size: 16px;
+        /* ============================================
+           BUBBLE CONTENT - Responsive Text
+           ============================================ */
+        
+        /* Initial/Icon for small bubbles */
+        .bubble-initial {
+            font-family: 'Comfortaa', sans-serif;
             font-weight: 700;
-            color: #fff;
-            margin-bottom: 2px;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            color: var(--nord-text-primary);
+            text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+            line-height: 1;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        body.light-theme .bubble-initial {
+            color: var(--blueprint-ink);
+            text-shadow: 0 1px 3px rgba(255,255,255,0.5);
+        }
+
+        /* Full info - hidden by default on small bubbles */
+        .bubble-full-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        .bubble-name {
+            font-family: 'Comfortaa', sans-serif;
+            font-weight: 700;
+            color: var(--nord-text-primary);
+            text-shadow: 0 2px 8px rgba(0,0,0,0.5);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 100%;
+            max-width: 90%;
+            line-height: 1.2;
+        }
+
+        body.light-theme .bubble-name {
+            color: var(--blueprint-ink);
+            text-shadow: none;
         }
 
         .bubble-model {
-            font-size: 10px;
-            color: rgba(255,255,255,0.5);
-            margin-bottom: 6px;
+            font-family: 'Source Code Pro', monospace;
+            color: var(--nord-text-muted);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
+            opacity: 0.8;
+        }
+
+        body.light-theme .bubble-model {
+            color: var(--blueprint-text-secondary);
         }
 
         .bubble-cost {
-            font-size: 18px;
+            font-family: 'Source Code Pro', monospace;
             font-weight: 700;
-            color: #00D4FF;
-            margin-bottom: 2px;
+            color: var(--nord-cyan);
+        }
+
+        body.light-theme .bubble-cost {
+            color: var(--blueprint-cyan);
         }
 
         .bubble-cost-change {
-            font-size: 10px;
-            margin-bottom: 6px;
+            font-family: 'Source Code Pro', monospace;
         }
 
-        .bubble-cost-change.positive { color: #00FF88; }
-        .bubble-cost-change.negative { color: #FF4757; }
+        .bubble-cost-change.positive { color: var(--status-active); }
+        .bubble-cost-change.negative { color: var(--status-error); }
 
         .bubble-tokens {
-            font-size: 10px;
-            color: rgba(255,255,255,0.6);
-            margin-bottom: 4px;
+            font-family: 'Source Code Pro', monospace;
+            color: var(--nord-text-medium);
+            opacity: 0.9;
+        }
+
+        body.light-theme .bubble-tokens {
+            color: var(--blueprint-text-secondary);
         }
 
         .bubble-runtime {
-            font-size: 11px;
-            color: rgba(255,255,255,0.7);
-            margin-bottom: 6px;
+            color: var(--nord-text-secondary);
+            opacity: 0.9;
+        }
+
+        body.light-theme .bubble-runtime {
+            color: var(--blueprint-text-secondary);
         }
 
         .bubble-progress {
-            width: 80%;
-            height: 4px;
-            background: rgba(255,255,255,0.1);
+            width: 70%;
+            height: 3px;
+            background: rgba(255,255,255,0.15);
             border-radius: 2px;
             overflow: hidden;
-            margin-bottom: 6px;
+            margin-top: 4px;
+        }
+
+        body.light-theme .bubble-progress {
+            background: rgba(0,0,0,0.1);
         }
 
         .bubble-progress-bar {
             height: 100%;
-            background: linear-gradient(90deg, #00D4FF, #00FF88);
+            background: linear-gradient(90deg, var(--nord-cyan), var(--status-active));
             border-radius: 2px;
             transition: width 0.3s ease;
         }
 
+        body.light-theme .bubble-progress-bar {
+            background: linear-gradient(90deg, var(--blueprint-cyan), var(--status-active));
+        }
+
         .bubble-sparkline {
-            width: 80%;
-            height: 20px;
             margin-top: 4px;
+            opacity: 0.8;
         }
 
         .bubble-error-icon {
             position: absolute;
-            top: 10px;
-            right: 10px;
-            font-size: 16px;
-            color: #FF4757;
+            top: 12%;
+            right: 12%;
+            font-size: 14px;
+            z-index: 10;
             animation: shake 0.5s ease-in-out infinite;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
         }
 
         @keyframes shake {
@@ -345,7 +736,46 @@
             75% { transform: translateX(2px); }
         }
 
-        /* Modal */
+        /* Status indicator dot */
+        .bubble-status-dot {
+            position: absolute;
+            bottom: 12%;
+            right: 12%;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            z-index: 10;
+        }
+
+        .bubble.status-active .bubble-status-dot {
+            background: var(--status-active);
+            box-shadow: 0 0 8px var(--status-active);
+            animation: dot-pulse 1.5s ease-in-out infinite;
+        }
+
+        .bubble.status-waiting .bubble-status-dot {
+            background: var(--status-waiting);
+            box-shadow: 0 0 8px var(--status-waiting);
+        }
+
+        .bubble.status-error .bubble-status-dot {
+            background: var(--status-error);
+            box-shadow: 0 0 8px var(--status-error);
+        }
+
+        .bubble.status-idle .bubble-status-dot {
+            background: var(--status-idle);
+            box-shadow: 0 0 6px var(--status-idle);
+        }
+
+        @keyframes dot-pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.2); }
+        }
+
+        /* ============================================
+           MODAL - NordSym Glassmorphism
+           ============================================ */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -354,21 +784,35 @@
             bottom: 0;
             background: rgba(5,6,8,0.85);
             backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             display: none;
             justify-content: center;
             align-items: center;
             z-index: 1000;
         }
 
+        body.light-theme .modal-overlay {
+            background: rgba(240, 244, 248, 0.85);
+        }
+
         .modal {
-            background: linear-gradient(135deg, rgba(20,22,28,0.95) 0%, rgba(10,12,16,0.95) 100%);
-            border: 1px solid rgba(0,212,255,0.2);
-            border-radius: 20px;
+            background: var(--nord-surface);
+            border: 1px solid var(--nord-border-accent);
+            border-radius: var(--radius-card);
             padding: 30px;
             min-width: 450px;
             max-width: 90vw;
-            box-shadow: 0 25px 80px rgba(0,0,0,0.5), 0 0 40px rgba(0,212,255,0.1);
+            box-shadow: var(--shadow-card-hover), 0 0 40px rgba(0,212,255,0.1);
             position: relative;
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+        }
+
+        body.light-theme .modal {
+            background: #ffffff;
+            border: 2px solid var(--blueprint-cyan);
+            box-shadow: 12px 12px 0px rgba(2, 132, 199, 0.15);
+            backdrop-filter: none;
         }
 
         .modal-header {
@@ -385,27 +829,39 @@
         }
 
         .modal-title {
+            font-family: 'Comfortaa', sans-serif;
             font-size: 24px;
-            font-weight: 600;
+            font-weight: 700;
+            color: var(--nord-text-primary);
+        }
+
+        body.light-theme .modal-title {
+            color: var(--blueprint-ink);
         }
 
         .modal-model {
+            font-family: 'Source Code Pro', monospace;
             font-size: 13px;
-            color: rgba(255,255,255,0.5);
+            color: var(--nord-text-muted);
+        }
+
+        body.light-theme .modal-model {
+            color: var(--blueprint-text-secondary);
         }
 
         .modal-status {
             padding: 6px 12px;
-            border-radius: 20px;
+            border-radius: var(--radius-pill);
+            font-family: 'Inter', sans-serif;
             font-size: 12px;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
-        .modal-status.active { background: rgba(0,255,136,0.2); color: #00FF88; }
-        .modal-status.waiting { background: rgba(255,184,0,0.2); color: #FFB800; }
-        .modal-status.error { background: rgba(255,71,87,0.2); color: #FF4757; }
+        .modal-status.active { background: rgba(0,255,136,0.2); color: var(--status-active); }
+        .modal-status.waiting { background: rgba(255,184,0,0.2); color: var(--status-waiting); }
+        .modal-status.error { background: rgba(255,71,87,0.2); color: var(--status-error); }
         .modal-status.idle { background: rgba(107,114,128,0.2); color: #9CA3AF; }
 
         .modal-grid {
@@ -417,45 +873,71 @@
 
         .modal-stat {
             background: rgba(0,0,0,0.3);
-            border-radius: 12px;
+            border-radius: var(--radius-card-sm);
             padding: 16px;
+            border: 1px solid var(--nord-border);
+        }
+
+        body.light-theme .modal-stat {
+            background: var(--blueprint-bg);
+            border: 1px solid var(--blueprint-lines-faint);
         }
 
         .modal-stat-label {
             font-size: 11px;
-            color: rgba(255,255,255,0.4);
+            color: var(--nord-text-muted);
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-bottom: 6px;
         }
 
+        body.light-theme .modal-stat-label {
+            color: var(--blueprint-text-secondary);
+        }
+
         .modal-stat-value {
+            font-family: 'Source Code Pro', monospace;
             font-size: 20px;
             font-weight: 600;
-            color: #00D4FF;
+            color: var(--nord-cyan);
+        }
+
+        body.light-theme .modal-stat-value {
+            color: var(--blueprint-cyan);
         }
 
         .modal-stat-change {
+            font-family: 'Source Code Pro', monospace;
             font-size: 12px;
             margin-top: 4px;
         }
 
-        .modal-stat-change.positive { color: #00FF88; }
-        .modal-stat-change.negative { color: #FF4757; }
+        .modal-stat-change.positive { color: var(--status-active); }
+        .modal-stat-change.negative { color: var(--status-error); }
 
         .modal-activity {
             background: rgba(0,0,0,0.3);
-            border-radius: 12px;
+            border-radius: var(--radius-card-sm);
             padding: 16px;
             margin-bottom: 24px;
+            border: 1px solid var(--nord-border);
+        }
+
+        body.light-theme .modal-activity {
+            background: var(--blueprint-bg);
+            border: 1px solid var(--blueprint-lines-faint);
         }
 
         .modal-activity-label {
             font-size: 11px;
-            color: rgba(255,255,255,0.4);
+            color: var(--nord-text-muted);
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-bottom: 12px;
+        }
+
+        body.light-theme .modal-activity-label {
+            color: var(--blueprint-text-secondary);
         }
 
         .modal-activity-graph {
@@ -472,25 +954,42 @@
             transition: height 0.3s ease;
         }
 
+        body.light-theme .modal-activity-bar {
+            background: linear-gradient(to top, rgba(2,132,199,0.3), rgba(2,132,199,0.8));
+        }
+
         .modal-task {
             background: rgba(0,212,255,0.05);
             border: 1px solid rgba(0,212,255,0.1);
-            border-radius: 12px;
+            border-radius: var(--radius-card-sm);
             padding: 16px;
+        }
+
+        body.light-theme .modal-task {
+            background: rgba(2,132,199,0.05);
+            border: 2px solid var(--blueprint-lines);
         }
 
         .modal-task-label {
             font-size: 11px;
-            color: rgba(255,255,255,0.4);
+            color: var(--nord-text-muted);
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-bottom: 8px;
         }
 
+        body.light-theme .modal-task-label {
+            color: var(--blueprint-text-secondary);
+        }
+
         .modal-task-text {
             font-size: 14px;
-            color: rgba(255,255,255,0.8);
+            color: var(--nord-text-secondary);
             line-height: 1.5;
+        }
+
+        body.light-theme .modal-task-text {
+            color: var(--blueprint-text-primary);
         }
 
         .modal-close {
@@ -500,9 +999,9 @@
             width: 36px;
             height: 36px;
             border: none;
-            background: rgba(255,255,255,0.1);
+            background: var(--nord-border);
             border-radius: 50%;
-            color: #fff;
+            color: var(--nord-text-primary);
             font-size: 20px;
             cursor: pointer;
             transition: all 0.2s;
@@ -513,7 +1012,19 @@
             transform: scale(1.1);
         }
 
-        /* Background grid */
+        body.light-theme .modal-close {
+            background: var(--blueprint-lines-faint);
+            color: var(--blueprint-ink);
+        }
+
+        body.light-theme .modal-close:hover {
+            background: var(--blueprint-cyan);
+            color: #ffffff;
+        }
+
+        /* ============================================
+           BACKGROUND GRID - NordSym Style
+           ============================================ */
         .grid-bg {
             position: fixed;
             top: 0;
@@ -527,9 +1038,14 @@
             pointer-events: none;
             z-index: 0;
         }
+
+        body.light-theme .grid-bg {
+            display: none;
+        }
     </style>
 </head>
 <body>
+    <div class="blueprint-grid"></div>
     <div class="grid-bg"></div>
     
     <div class="header">
@@ -567,6 +1083,13 @@
             <button class="control-btn" data-sort="runtime">Runtime</button>
             <button class="control-btn" data-sort="tokens">Tokens</button>
         </div>
+    </div>
+
+    <div class="theme-toggle">
+        <button class="theme-toggle-btn" onclick="toggleTheme()">
+            <span id="theme-icon">🌙</span>
+            <span id="theme-text">Deep Space</span>
+        </button>
     </div>
 
     <div class="legend">
@@ -627,7 +1150,24 @@
     </div>
 
     <script>
-        // Mock agent data with more details
+        // Theme Toggle
+        function toggleTheme() {
+            const body = document.body;
+            const icon = document.getElementById('theme-icon');
+            const text = document.getElementById('theme-text');
+            
+            body.classList.toggle('light-theme');
+            
+            if (body.classList.contains('light-theme')) {
+                icon.textContent = '☀️';
+                text.textContent = 'Blåkopia';
+            } else {
+                icon.textContent = '🌙';
+                text.textContent = 'Deep Space';
+            }
+        }
+
+        // Mock agent data
         const agents = [
             { id: 1, name: 'Main Orchestrator', model: 'Claude Opus 4', status: 'active', activity: 0.9, cost: 4.87, costRate: 0.12, runtime: 847, tokensIn: 89000, tokensOut: 36000, calls: 23, completion: 67, task: 'Analyzing codebase and generating documentation for the API module', history: [] },
             { id: 2, name: 'Code Analyzer', model: 'Claude Sonnet 4', status: 'active', activity: 0.7, cost: 1.23, costRate: 0.05, runtime: 423, tokensIn: 45000, tokensOut: 22000, calls: 45, completion: 82, task: 'Running automated tests and fixing failing edge cases', history: [] },
@@ -658,6 +1198,12 @@
         let expandedBubble = null;
         let bubbleElements = [];
 
+        // Size thresholds for content display
+        const SIZE_TINY = 100;      // Only initial
+        const SIZE_SMALL = 140;     // Initial + cost
+        const SIZE_MEDIUM = 180;    // Name + cost + tokens
+        const SIZE_LARGE = 220;     // Full info
+
         // Physics simulation
         class BubblePhysics {
             constructor(element, agent, index, total) {
@@ -680,9 +1226,8 @@
             }
 
             calculateSize(agent) {
-                // Size based on cost (more cost = bigger bubble)
-                const minSize = 120;
-                const maxSize = 220;
+                const minSize = 100;
+                const maxSize = 240;
                 const maxCost = Math.max(...agents.map(a => a.cost));
                 const normalized = agent.cost / maxCost;
                 return minSize + normalized * (maxSize - minSize);
@@ -757,6 +1302,87 @@
                 this.element.style.height = this.size + 'px';
                 this.element.style.left = (this.x - this.size / 2) + 'px';
                 this.element.style.top = (this.y - this.size / 2) + 'px';
+                
+                // Update content visibility based on size
+                this.updateContentForSize();
+            }
+
+            updateContentForSize() {
+                const content = this.element.querySelector('.bubble-content');
+                if (!content) return;
+
+                const size = this.size;
+                
+                // Calculate dynamic font sizes based on bubble size
+                const baseFontSize = Math.max(8, Math.min(16, size * 0.07));
+                const initialSize = Math.max(16, Math.min(48, size * 0.25));
+                const nameSize = Math.max(10, Math.min(16, size * 0.075));
+                const costSize = Math.max(12, Math.min(22, size * 0.1));
+                const smallSize = Math.max(7, Math.min(11, size * 0.05));
+                
+                const initial = content.querySelector('.bubble-initial');
+                const fullInfo = content.querySelector('.bubble-full-info');
+                const name = content.querySelector('.bubble-name');
+                const model = content.querySelector('.bubble-model');
+                const cost = content.querySelector('.bubble-cost');
+                const costChange = content.querySelector('.bubble-cost-change');
+                const tokens = content.querySelector('.bubble-tokens');
+                const runtime = content.querySelector('.bubble-runtime');
+                const progress = content.querySelector('.bubble-progress');
+                const sparkline = content.querySelector('.bubble-sparkline');
+
+                if (size < SIZE_TINY) {
+                    // Tiny: Only initial
+                    if (initial) {
+                        initial.style.display = 'block';
+                        initial.style.fontSize = initialSize + 'px';
+                    }
+                    if (fullInfo) fullInfo.style.display = 'none';
+                } else if (size < SIZE_SMALL) {
+                    // Small: Initial + cost below
+                    if (initial) {
+                        initial.style.display = 'block';
+                        initial.style.fontSize = (initialSize * 0.7) + 'px';
+                    }
+                    if (fullInfo) fullInfo.style.display = 'flex';
+                    if (name) name.style.display = 'none';
+                    if (model) model.style.display = 'none';
+                    if (cost) { cost.style.display = 'block'; cost.style.fontSize = costSize + 'px'; }
+                    if (costChange) costChange.style.display = 'none';
+                    if (tokens) tokens.style.display = 'none';
+                    if (runtime) runtime.style.display = 'none';
+                    if (progress) progress.style.display = 'none';
+                    if (sparkline) sparkline.style.display = 'none';
+                } else if (size < SIZE_MEDIUM) {
+                    // Medium: Name + cost + basic info
+                    if (initial) initial.style.display = 'none';
+                    if (fullInfo) fullInfo.style.display = 'flex';
+                    if (name) { name.style.display = 'block'; name.style.fontSize = nameSize + 'px'; }
+                    if (model) { model.style.display = 'block'; model.style.fontSize = smallSize + 'px'; }
+                    if (cost) { cost.style.display = 'block'; cost.style.fontSize = costSize + 'px'; }
+                    if (costChange) { costChange.style.display = 'block'; costChange.style.fontSize = smallSize + 'px'; }
+                    if (tokens) tokens.style.display = 'none';
+                    if (runtime) runtime.style.display = 'none';
+                    if (progress) progress.style.display = 'block';
+                    if (sparkline) sparkline.style.display = 'none';
+                } else {
+                    // Large: Full info
+                    if (initial) initial.style.display = 'none';
+                    if (fullInfo) fullInfo.style.display = 'flex';
+                    if (name) { name.style.display = 'block'; name.style.fontSize = nameSize + 'px'; }
+                    if (model) { model.style.display = 'block'; model.style.fontSize = smallSize + 'px'; }
+                    if (cost) { cost.style.display = 'block'; cost.style.fontSize = costSize + 'px'; }
+                    if (costChange) { costChange.style.display = 'block'; costChange.style.fontSize = smallSize + 'px'; }
+                    if (tokens) { tokens.style.display = 'block'; tokens.style.fontSize = smallSize + 'px'; }
+                    if (runtime) { runtime.style.display = 'block'; runtime.style.fontSize = (smallSize + 1) + 'px'; }
+                    if (progress) progress.style.display = 'block';
+                    if (sparkline) { 
+                        sparkline.style.display = 'block';
+                        const sparkSize = Math.min(80, size * 0.4);
+                        sparkline.style.width = sparkSize + 'px';
+                        sparkline.style.height = (sparkSize * 0.25) + 'px';
+                    }
+                }
             }
 
             updateSize() {
@@ -765,27 +1391,41 @@
             }
         }
 
+        function getInitial(name) {
+            const words = name.split(' ');
+            if (words.length >= 2) {
+                return words[0][0] + words[1][0];
+            }
+            return name.substring(0, 2).toUpperCase();
+        }
+
         function createBubble(agent) {
             const bubble = document.createElement('div');
             bubble.className = `bubble status-${agent.status}`;
             bubble.dataset.agentId = agent.id;
             
-            const totalTokens = agent.tokensIn + agent.tokensOut;
             const costChange = agent.costRate > 0 ? `+$${agent.costRate.toFixed(3)}/m` : '—';
             const costClass = agent.costRate > 0 ? 'positive' : '';
+            const initial = getInitial(agent.name);
             
             bubble.innerHTML = `
                 ${agent.status === 'error' ? '<div class="bubble-error-icon">⚠️</div>' : ''}
-                <div class="bubble-name">${agent.name}</div>
-                <div class="bubble-model">${agent.model}</div>
-                <div class="bubble-cost">$${agent.cost.toFixed(2)}</div>
-                <div class="bubble-cost-change ${costClass}">${costChange}</div>
-                <div class="bubble-tokens">${formatTokens(agent.tokensIn)} in / ${formatTokens(agent.tokensOut)} out</div>
-                <div class="bubble-runtime">${formatTime(agent.runtime)}</div>
-                <div class="bubble-progress">
-                    <div class="bubble-progress-bar" style="width: ${agent.completion}%"></div>
+                <div class="bubble-status-dot"></div>
+                <div class="bubble-content">
+                    <div class="bubble-initial">${initial}</div>
+                    <div class="bubble-full-info">
+                        <div class="bubble-name">${agent.name}</div>
+                        <div class="bubble-model">${agent.model}</div>
+                        <div class="bubble-cost">$${agent.cost.toFixed(2)}</div>
+                        <div class="bubble-cost-change ${costClass}">${costChange}</div>
+                        <div class="bubble-tokens">${formatTokens(agent.tokensIn)}↓ ${formatTokens(agent.tokensOut)}↑</div>
+                        <div class="bubble-runtime">${formatTime(agent.runtime)}</div>
+                        <div class="bubble-progress">
+                            <div class="bubble-progress-bar" style="width: ${agent.completion}%"></div>
+                        </div>
+                        <canvas class="bubble-sparkline"></canvas>
+                    </div>
                 </div>
-                <canvas class="bubble-sparkline" width="80" height="20"></canvas>
             `;
             
             bubble.addEventListener('click', () => showModal(agent));
@@ -793,7 +1433,10 @@
             document.getElementById('bubbleContainer').appendChild(bubble);
             
             // Draw sparkline
-            drawSparkline(bubble.querySelector('.bubble-sparkline'), agent.history, agent.status);
+            const sparkline = bubble.querySelector('.bubble-sparkline');
+            if (sparkline) {
+                drawSparkline(sparkline, agent.history, agent.status);
+            }
             
             return bubble;
         }
@@ -817,7 +1460,7 @@
             });
             ctx.lineTo(width, height);
             ctx.closePath();
-            ctx.fillStyle = color + '20';
+            ctx.fillStyle = color + '30';
             ctx.fill();
             
             // Line
@@ -835,7 +1478,7 @@
 
         function formatTokens(num) {
             if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-            if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
+            if (num >= 1000) return (num / 1000).toFixed(0) + 'k';
             return num.toString();
         }
 
@@ -847,7 +1490,7 @@
             }
             const mins = Math.floor(seconds / 60);
             const secs = seconds % 60;
-            return `${mins}m ${secs.toString().padStart(2, '0')}s`;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
         }
 
         function updateStats() {
@@ -897,19 +1540,29 @@
             const agent = bubbleObj.agent;
             const bubble = bubbleObj.element;
             
-            const totalTokens = agent.tokensIn + agent.tokensOut;
             const costChange = agent.costRate > 0 ? `+$${agent.costRate.toFixed(3)}/m` : '—';
             const costClass = agent.costRate > 0 ? 'positive' : '';
             
-            bubble.querySelector('.bubble-cost').textContent = `$${agent.cost.toFixed(2)}`;
-            bubble.querySelector('.bubble-cost-change').textContent = costChange;
-            bubble.querySelector('.bubble-cost-change').className = `bubble-cost-change ${costClass}`;
-            bubble.querySelector('.bubble-tokens').textContent = `${formatTokens(agent.tokensIn)} in / ${formatTokens(agent.tokensOut)} out`;
-            bubble.querySelector('.bubble-runtime').textContent = formatTime(agent.runtime);
-            bubble.querySelector('.bubble-progress-bar').style.width = agent.completion + '%';
+            const cost = bubble.querySelector('.bubble-cost');
+            const costChangeEl = bubble.querySelector('.bubble-cost-change');
+            const tokens = bubble.querySelector('.bubble-tokens');
+            const runtime = bubble.querySelector('.bubble-runtime');
+            const progressBar = bubble.querySelector('.bubble-progress-bar');
+            const sparkline = bubble.querySelector('.bubble-sparkline');
+            
+            if (cost) cost.textContent = `$${agent.cost.toFixed(2)}`;
+            if (costChangeEl) {
+                costChangeEl.textContent = costChange;
+                costChangeEl.className = `bubble-cost-change ${costClass}`;
+            }
+            if (tokens) tokens.textContent = `${formatTokens(agent.tokensIn)}↓ ${formatTokens(agent.tokensOut)}↑`;
+            if (runtime) runtime.textContent = formatTime(agent.runtime);
+            if (progressBar) progressBar.style.width = agent.completion + '%';
             
             // Update sparkline
-            drawSparkline(bubble.querySelector('.bubble-sparkline'), agent.history, agent.status);
+            if (sparkline) {
+                drawSparkline(sparkline, agent.history, agent.status);
+            }
             
             // Update size based on new cost
             bubbleObj.updateSize();
@@ -975,6 +1628,7 @@
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closeModal();
+            if (e.key === 't' || e.key === 'T') toggleTheme();
         });
 
         // Initialize
@@ -1007,13 +1661,11 @@
                     agent.tokensOut += Math.floor(Math.random() * 80);
                     agent.runtime++;
                     
-                    // Update completion
                     if (agent.completion < 100) {
                         agent.completion = Math.min(100, agent.completion + Math.random() * 0.5);
                     }
                 }
                 
-                // Update history
                 const newActivity = agent.status === 'active' ? 0.3 + Math.random() * 0.7 : 
                                    agent.status === 'waiting' ? 0.1 + Math.random() * 0.3 : 
                                    agent.status === 'error' ? Math.random() * 0.5 : 
